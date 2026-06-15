@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>気づきメモ</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f7f5f2;
+      --surface: #ffffff;
+      --ink: #1a1814;
+      --muted: #8a8680;
+      --accent: #7c6e5a;
+      --accent-light: #e8e2da;
+      --success: #4a7c59;
+      --error: #9b3a3a;
+      --border: #ddd9d3;
+      --radius: 12px;
+    }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 36px;
+      width: 100%;
+      max-width: 520px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+    }
+
+    .header {
+      margin-bottom: 28px;
+    }
+
+    .header h1 {
+      font-size: 18px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      color: var(--ink);
+    }
+
+    .header p {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+      font-weight: 300;
+    }
+
+    .date-display {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    .field {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--accent);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    textarea, input[type="text"], input[type="password"] {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 14px;
+      font-weight: 300;
+      color: var(--ink);
+      transition: border-color 0.2s;
+      outline: none;
+      resize: none;
+    }
+
+    textarea:focus, input:focus {
+      border-color: var(--accent);
+    }
+
+    textarea.main {
+      min-height: 120px;
+      line-height: 1.7;
+    }
+
+    textarea.term {
+      min-height: 60px;
+      line-height: 1.7;
+    }
+
+    .tag-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .tag {
+      background: var(--accent-light);
+      color: var(--accent);
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s;
+      font-weight: 400;
+      user-select: none;
+    }
+
+    .tag.selected {
+      background: var(--accent);
+      color: white;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 24px 0;
+    }
+
+    .config-toggle {
+      font-size: 11px;
+      color: var(--muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      user-select: none;
+      margin-bottom: 16px;
+    }
+
+    .config-toggle:hover { color: var(--accent); }
+
+    .config-section {
+      display: none;
+      margin-bottom: 20px;
+    }
+
+    .config-section.open { display: block; }
+
+    .config-hint {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 6px;
+      line-height: 1.5;
+      font-weight: 300;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.02em;
+    }
+
+    .btn:hover { background: #6a5c4a; }
+    .btn:active { transform: scale(0.99); }
+    .btn:disabled { background: var(--muted); cursor: not-allowed; }
+
+    .status {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 300;
+      display: none;
+      line-height: 1.5;
+    }
+
+    .status.success {
+      background: #eef5f1;
+      color: var(--success);
+      display: block;
+    }
+
+    .status.error {
+      background: #f9eeee;
+      color: var(--error);
+      display: block;
+    }
+
+    .char-count {
+      font-size: 11px;
+      color: var(--muted);
+      text-align: right;
+      margin-top: 4px;
+      font-family: 'DM Mono', monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <h1>今日の気づき</h1>
+      <p>心理学者さんとの対話から</p>
+      <div class="date-display" id="dateDisplay"></div>
+    </div>
+
+    <div class="field">
+      <label>気づき・出来事</label>
+      <textarea class="main" id="insight" placeholder="今日気づいたこと、モヤっとしたこと、なんでも..." oninput="updateCount()"></textarea>
+      <div class="char-count"><span id="charCount">0</span> 文字</div>
+    </div>
+
+    <div class="field">
+      <label>心理学キーワード</label>
+      <textarea class="term" id="term" placeholder="例：防衛的傾聴、心理的契約違反..."></textarea>
+    </div>
+
+    <div class="field">
+      <label>タグ</label>
+      <div class="tag-row">
+        <span class="tag" onclick="toggleTag(this)">職場</span>
+        <span class="tag" onclick="toggleTag(this)">人間関係</span>
+        <span class="tag" onclick="toggleTag(this)">家族</span>
+        <span class="tag" onclick="toggleTag(this)">自己理解</span>
+        <span class="tag" onclick="toggleTag(this)">身体サイン</span>
+        <span class="tag" onclick="toggleTag(this)">感情</span>
+        <span class="tag" onclick="toggleTag(this)">ビジョン</span>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="config-toggle" onclick="toggleConfig()">
+      ⚙️ Notion設定 <span id="configArrow">▼</span>
+    </div>
+
+    <div class="config-section" id="configSection">
+      <div class="field">
+        <label>Integration Token</label>
+        <input type="password" id="token" placeholder="secret_xxxx..." oninput="saveConfig()">
+        <div class="config-hint">notion.so/my-integrations で取得したトークン</div>
+      </div>
+      <div class="field">
+        <label>Database ID</label>
+        <input type="text" id="dbId" placeholder="32文字のID" oninput="saveConfig()">
+        <div class="config-hint">NotionデータベースURLの ?v= 前の文字列</div>
+      </div>
+    </div>
+
+    <button class="btn" id="saveBtn" onclick="saveToNotion()">Notionに保存</button>
+    <div class="status" id="status"></div>
+  </div>
+
+  <script>
+    // 日付表示
+    const now = new Date();
+    document.getElementById('dateDisplay').textContent =
+      now.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+
+    // 設定の読み込み
+    function loadConfig() {
+      const token = localStorage.getItem('notion_token') || '';
+      const dbId = localStorage.getItem('notion_db_id') || '';
+      document.getElementById('token').value = token;
+      document.getElementById('dbId').value = dbId;
+      if (token || dbId) {
+        // 設定済みなら閉じたまま
+      }
+    }
+
+    function saveConfig() {
+      localStorage.setItem('notion_token', document.getElementById('token').value);
+      localStorage.setItem('notion_db_id', document.getElementById('dbId').value);
+    }
+
+    function toggleConfig() {
+      const section = document.getElementById('configSection');
+      const arrow = document.getElementById('configArrow');
+      section.classList.toggle('open');
+      arrow.textContent = section.classList.contains('open') ? '▲' : '▼';
+    }
+
+    function toggleTag(el) {
+      el.classList.toggle('selected');
+    }
+
+    function updateCount() {
+      const text = document.getElementById('insight').value;
+      document.getElementById('charCount').textContent = text.length;
+    }
+
+    function getSelectedTags() {
+      return [...document.querySelectorAll('.tag.selected')].map(t => t.textContent);
+    }
+
+    function showStatus(type, msg) {
+      const el = document.getElementById('status');
+      el.className = 'status ' + type;
+      el.textContent = msg;
+    }
+
+    async function saveToNotion() {
+      const insight = document.getElementById('insight').value.trim();
+      const term = document.getElementById('term').value.trim();
+      const tags = getSelectedTags();
+      const token = document.getElementById('token').value.trim();
+      const dbId = document.getElementById('dbId').value.trim();
+
+      if (!insight) { showStatus('error', '気づきを入力してください'); return; }
+      if (!token) { showStatus('error', 'Integration Tokenを設定してください（⚙️をタップ）'); return; }
+      if (!dbId) { showStatus('error', 'Database IDを設定してください（⚙️をタップ）'); return; }
+
+      const btn = document.getElementById('saveBtn');
+      btn.disabled = true;
+      btn.textContent = '保存中...';
+
+      const today = now.toISOString().split('T')[0];
+
+      const properties = {
+        "名前": {
+          "title": [{ "text": { "content": insight.slice(0, 80) + (insight.length > 80 ? '...' : '') } }]
+        },
+        "気づき": {
+          "rich_text": [{ "text": { "content": insight } }]
+        },
+        "日付": {
+          "date": { "start": today }
+        }
+      };
+
+      if (term) {
+        properties["心理学キーワード"] = {
+          "rich_text": [{ "text": { "content": term } }]
+        };
+      }
+
+      if (tags.length > 0) {
+        properties["タグ"] = {
+          "multi_select": tags.map(t => ({ "name": t }))
+        };
+      }
+
+      try {
+        const res = await fetch('https://api.notion.com/v1/pages', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Notion-Version': '2022-06-28'
+          },
+          body: JSON.stringify({
+            parent: { database_id: dbId },
+            properties
+          })
+        });
+
+        if (res.ok) {
+          showStatus('success', '✓ Notionに保存しました');
+          document.getElementById('insight').value = '';
+          document.getElementById('term').value = '';
+          document.getElementById('charCount').textContent = '0';
+          document.querySelectorAll('.tag.selected').forEach(t => t.classList.remove('selected'));
+        } else {
+          const err = await res.json();
+          showStatus('error', `エラー: ${err.message || '保存に失敗しました'}`);
+        }
+      } catch (e) {
+        showStatus('error', 'ネットワークエラーが発生しました');
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Notionに保存';
+    }
+
+    loadConfig();
+  </script>
+</body>
+</html>
